@@ -135,6 +135,14 @@ main{padding:24px 20px 104px}
 .mc{border-radius:22px 22px 0 0;padding:22px 22px calc(22px + env(safe-area-inset-bottom,0px))}
 @media(min-width:860px){.mc{border-radius:22px}}
 .mc h3{font-size:14px;margin:18px 0 6px}
+.bt.dg{background:var(--er);color:var(--sf);box-shadow:none}
+.bt.s.dg{background:var(--erb);color:var(--er)}
+#lgn{position:fixed;inset:0;z-index:100;background:var(--bg);display:grid;place-items:center;padding:16px;overflow:auto}
+.lc{width:100%;max-width:380px;background:var(--sf);border:1px solid var(--ln);border-radius:20px;padding:28px;box-shadow:var(--shh)}
+.lc h2{margin:18px 0 4px;font-size:22px}.lc .f{margin-top:16px}
+.lg2{display:flex;gap:10px;align-items:center;font-weight:800;font-size:20px}
+.lg2 i{width:32px;height:32px;border-radius:9px;background:var(--ac);color:var(--acf);display:grid;place-items:center;font-style:normal}
+.lc a{color:var(--ac);text-decoration:none;font-weight:600}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -147,7 +155,7 @@ main{padding:24px 20px 104px}
 <script>
 const $=s=>document.querySelector(s);
 const E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const F=n=>Math.round(n).toLocaleString('fr-FR').replace(/[\u202f\u00a0]/g,' ')+' MAD';
+const F=n=>{try{return new Intl.NumberFormat(S.lang==='en'?'en-US':'fr-FR',{style:'currency',currency:S.cur||'MAD',maximumFractionDigits:0}).format(n)}catch(e){return Math.round(n)+' MAD'}};
 const dA=n=>new Date(Date.now()-n*864e5).toISOString().slice(0,10);
 const IC={dash:'M3 3h8v8H3zM13 3h8v5h-8zM13 10h8v11h-8zM3 13h8v8H3z',clients:'M16 20v-1a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v1M10 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM20 20v-1a4 4 0 0 0-3-3.9',stock:'M21 8l-9-5-9 5v8l9 5 9-5zM3 8l9 5 9-5M12 13v8',ventes:'M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6',sav:'M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-.5-.5-2.5z'};
 const NAV=[['dash','Accueil'],['clients','Clients'],['stock','Stock'],['ventes','Ventes'],['sav','SAV']];
@@ -230,7 +238,7 @@ function fiche(id){
  <h3>Ordinateurs actuels</h3>${c.m.map(m=>`<div class="ln"><span>${E(m.n)}</span><span class="k">N° ${E(m.sn)}</span></div>`).join('')||'<div class="k">Aucune fiche technique.</div>'}
  <h3>Devis et factures</h3>${ds.map(d=>`<div class="ln"><span>${d.n} · ${d.dt}</span><span>${F(tot(d))} ${pill(d.s)}</span></div>`).join('')||'<div class="k">Aucun document.</div>'}
  <h3>Réparations</h3>${rs.map(r=>`<div class="ln"><span>${E(r.mc)} — ${E(r.sy)}</span>${pill(r.s)}</div>`).join('')||'<div class="k">Aucune réparation.</div>'}
- <div class="bar2" style="margin-top:14px"><button class="bt" onclick="closeM();fDoc(${id})">Nouveau devis</button><button class="bt s" onclick="closeM()">Fermer</button></div>`)}
+ <div class="bar2" style="margin-top:14px"><button class="bt" onclick="closeM();fDoc(${id})">Nouveau devis</button><button class="bt s dg" onclick="delC(${id})">Supprimer le client</button><button class="bt s" onclick="closeM()">Fermer</button></div>`)}
 function fClient(){modal(`<h2>Nouveau client</h2><div class="f"><label>Nom<input id="a1"></label><label>Téléphone<input id="a2" type="tel"></label><label>E-mail<input id="a3" type="email"></label><label>Ville<input id="a4"></label><label>Ordinateur actuel (optionnel)<input id="a5" placeholder="Modèle"></label><label>N° de série<input id="a6"></label></div><div class="bar2" style="margin-top:12px"><button class="bt" onclick="addC()">Enregistrer le client</button><button class="bt s" onclick="closeM()">Annuler</button></div>`)}
 function addC(){const n=$('#a1').value.trim();if(!n){$('#a1').focus();return}
  S.c.push({id:nid(S.c),nom:n,tel:$('#a2').value,email:$('#a3').value,ville:$('#a4').value,m:$('#a5').value?[{n:$('#a5').value,sn:$('#a6').value}]:[]});save();closeM();render()}
@@ -290,8 +298,49 @@ function clients(){
 function stT(L){return`<div class="cards">${L.map(p=>`<div class="card ${p.q<3?'low':''}"><div class="row"><div><b>${E(p.ma+' '+p.mo)}</b><div class="k">${E(p.cat)}</div></div>${pill(p.et)}</div><div class="ch">${[p.cpu,p.ram,p.sto,p.gpu].filter(x=>x&&x!=='—').map(x=>`<span>${E(x)}</span>`).join('')}</div><div class="row"><span class="px">${F(p.px)}</span><span><button class="qb" onclick="adj(${p.id},-1)">−</button> <span class="pl ${p.q<3?'er':'ok'}">${p.q<3?'Stock bas · ':''}${p.q}</span> <button class="qb" onclick="adj(${p.id},1)">+</button></span></div></div>`).join('')||'<div class="em">Aucun produit ne correspond.</div>'}</div>`}
 function ventes(){
  return`<div class="bar2"><button class="bt" onclick="fDoc()">Créer un devis</button></div><div class="cards">${S.d.slice().reverse().map(d=>`<div class="card"><div class="row"><div><b>${d.n}</b><div class="k">${d.t} · ${d.dt}</div></div>${pill(d.s)}</div><div><div style="font-weight:600">${E(cl(d.c).nom)}</div><div class="k">${d.l.map(l=>l.q+' × '+E(pr(l.p).mo)).join(', ')}</div></div><div class="row"><span class="px">${F(tot(d))}</span><select onchange="setS(${d.id},this.value)">${(d.t==='Devis'?['En attente','Annulé']:['En attente','Payé','Annulé']).map(s=>`<option ${s===d.s?'selected':''}>${s}</option>`).join('')}</select></div>${d.t==='Devis'&&d.s==='En attente'?`<button class="bt s" onclick="conv(${d.id})">Passer en facture</button>`:''}</div>`).join('')}</div>`}
+function delC(id){const c=cl(id),n=S.d.filter(d=>d.c==id).length,r=S.r.filter(x=>x.c==id).length;
+ modal(`<h2>Supprimer ${E(c.nom)} ?</h2><p>Cette action est définitive.${n||r?` Ses ${n} devis et factures et ses ${r} réparations seront aussi supprimés.`:''}</p><div class="bar2"><button class="bt dg" onclick="doDel(${id})">Oui, supprimer</button><button class="bt s" onclick="closeM()">Annuler</button></div>`)}
+function doDel(id){S.c=S.c.filter(c=>c.id!=id);S.d=S.d.filter(d=>d.c!=id);S.r=S.r.filter(r=>r.c!=id);save();closeM();render()}
 const vb=document.createElement('button');vb.id='vb';vb.className='ib vb';vb.setAttribute('aria-label','Devis et factures');vb.innerHTML='<svg class="i" viewBox="0 0 24 24"><path d="'+IC.ventes+'"/></svg>';vb.onclick=()=>nav('ventes');$('#tb').before(vb);
+const sb=document.createElement('button');sb.id='st';sb.className='ib';sb.innerHTML=`<svg class='i' viewBox='0 0 24 24'><path d='M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6'/></svg>`;sb.onclick=fSet;$('#tb').before(sb);
+const Q=String.fromCharCode(1),CU={MAD:'MAD',XOF:'FCFA',EUR:'€',USD:'$'};
+const EN=[['Tableau de bord','Dashboard'],['Stock et catalogue','Stock and catalog'],['Devis et factures','Quotes and invoices'],['SAV et réparations','After-sales repairs'],['Ventes du mois','Sales this month'],['Documents en attente','Pending documents'],['Articles en stock bas','Low-stock items'],['Réparations ouvertes','Open repairs'],['Atelier de réparation','Repair workshop'],['Aucune réparation ouverte.','No open repairs.'],['Alertes de stock (moins de 3 unités)','Stock alerts (fewer than 3 units)'],['Tout est bien approvisionné.','Everything is well stocked.'],['Derniers clients','Latest customers'],['Dernières ventes','Latest sales'],['Ajouter un client','Add customer'],['Achats payés','Paid purchases'],['Ordinateurs actuels','Current computers'],['Aucune fiche technique.','No technical record.'],['Aucun document.','No documents.'],['Aucune réparation.','No repairs.'],['Nouveau devis','New quote'],['Fermer','Close'],['Supprimer le client','Delete customer'],['Cette action est définitive.','This action cannot be undone.'],['Oui, supprimer','Yes, delete'],['Annuler','Cancel'],['Nouveau client','New customer'],['<label>Nom<','<label>Name<'],['Téléphone','Phone'],['<label>Ville<','<label>City<'],['Ordinateur actuel (optionnel)','Current computer (optional)'],['Modèle','Model'],['N° de série','Serial number'],['N° ','No. '],['Enregistrer le client','Save customer'],['Filtrer (marque, CPU, GPU…)','Filter (brand, CPU, GPU…)'],['Toutes catégories','All categories'],['Neuf et reconditionné','New and refurbished'],['Ajouter un produit','Add product'],['Aucun produit ne correspond.','No matching products.'],['Stock bas · ','Low stock · '],['Nouveau produit','New product'],['<label>Marque<','<label>Brand<'],['<label>Stockage<','<label>Storage<'],['<label>État<','<label>Condition<'],['<label>Catégorie<','<label>Category<'],['Quantité','Quantity'],['Enregistrer le produit','Save product'],['Portable','Laptop'],['Bureau','Desktop'],['Composant','Component'],['Accessoire','Accessory'],['Reconditionné','Refurbished'],['Neuf','New'],['cœurs','cores'],['Créer un devis','Create quote'],['Passer en facture','Convert to invoice'],['Devis','Quote'],['Facture','Invoice'],['Payé','Paid'],['En attente','Pending'],['Annulé','Cancelled'],['Diagnostiqué','Diagnosed'],['En cours','In progress'],['Prêt','Ready'],['Récupéré','Collected'],['>Client<','>Customer<'],['Clients','Customers'],['Ventes','Sales'],['Réparations','Repairs'],['>Réparation<','>Repair<'],['>Produit<','>Product<'],['Déposer une machine','Drop off a machine'],['Aucune machine.','No machines.'],['Pièces : ','Parts: '],['Symptômes de la panne','Fault symptoms'],['Pièces à changer','Parts to replace'],['Enregistrer le dépôt','Save drop-off'],['Enregistrer le devis','Save quote'],['Rechercher un client, un n° de série, un statut…','Search a customer, serial number, status…'],['Aucun résultat.','No results.'],['Paramètres','Settings'],['<label>Langue<','<label>Language<'],['<label>Devise<','<label>Currency<'],['Dirham marocain','Moroccan dirham'],['Franc CFA','CFA franc'],['Dollar US','US dollar'],['Changer de thème','Switch theme']].sort((a,b)=>b[0].length-a[0].length);
+const RXS=[[/([0-9]+) en SAV/g,'$1 in repair'],[/([0-9]+) % de l’objectif/g,'$1% of goal'],[/([0-9]+) en stock/g,'$1 in stock'],[/Article ([0-9])/g,'Item $1'],[/([0-9]+) Go/g,'$1 GB'],[/([0-9]+) To/g,'$1 TB'],[new RegExp('Supprimer ([^<]*) [?]</h2>','g'),'Delete $1?</h2>'],[new RegExp('Ses ([0-9]+) devis et factures et ses ([0-9]+) réparations seront aussi supprimés[.]','g'),'Its $1 quotes and invoices and $2 repairs will also be deleted.']];
+function LX(h){
+ h=h.replace('Prix (MAD)',()=>(S.lang==='en'?'Price (':'Prix (')+CU[S.cur||'MAD']+')');
+ if(S.lang!=='en')return h;
+ h=h.replace(new RegExp('<option(?![^>]* value=)([^>]*)>([^<]*)</option>','g'),(m,a,t)=>`<option value='${Q}${encodeURIComponent(t)}${Q}'${a}>${t}</option>`);
+ for(const [r,t] of RXS)h=h.replace(r,t);
+ for(const [k,t] of EN)h=h.split(k).join(t);
+ return h.replace(new RegExp(Q+'([^'+Q+']*)'+Q,'g'),(m,e)=>decodeURIComponent(e))}
+function modal(h){$('#md').innerHTML=`<div class='mc'>${LX(h)}</div>`;$('#md').classList.add('on')}
+function fl(){const q=fS.q.toLowerCase();$('#sl').innerHTML=LX(stT(S.p.filter(p=>(!fS.cat||p.cat===fS.cat)&&(!fS.et||p.et===fS.et)&&(p.ma+' '+p.mo+' '+p.cpu+' '+p.gpu).toLowerCase().includes(q))))}
+function stat(){document.documentElement.lang=S.lang||'fr';$('#q').placeholder=LX('Rechercher un client, un n° de série, un statut…');$('#tb').setAttribute('aria-label',LX('Changer de thème'));vb.setAttribute('aria-label',LX('Devis et factures'));sb.setAttribute('aria-label',LX('Paramètres'))}
+const _r=render;render=function(){_r();if(S.lang==='en'){['#main','#bn','#side'].forEach(s=>{$(s).innerHTML=LX($(s).innerHTML)});$('#ttl').textContent=LX($('#ttl').textContent)}stat()};
+const _s=srch;srch=function(q){_s(q);const b=$('#sr');if(!b.hidden&&S.lang==='en')b.innerHTML=LX(b.innerHTML)};
+function fSet(){const l=S.lang||'fr',c=S.cur||'MAD';modal(`<h2>Paramètres</h2><div class='f'><label>Langue<select id='sLg'><option value='fr' ${l==='fr'?'selected':''}>Français</option><option value='en' ${l==='en'?'selected':''}>English</option></select></label><label>Devise<select id='sCu'>${[['MAD','Dirham marocain (MAD)'],['XOF','Franc CFA (XOF)'],['EUR','Euro (EUR)'],['USD','Dollar US (USD)']].map(([v,t])=>`<option value='${v}' ${v===c?'selected':''}>${t}</option>`).join('')}</select></label></div><div class='bar2' style='margin-top:12px'><button class='bt' onclick='setPref()'>OK</button><button class='bt s' onclick='closeM()'>Fermer</button></div>`)}
+function setPref(){S.lang=$('#sLg').value;S.cur=$('#sCu').value;save();closeM();render()}
+EN.push(['Connexion','Sign in'],['Créer le compte administrateur','Create administrator account'],['Créer le compte','Create account'],['Connecte-toi pour accéder au CRM.','Sign in to access the CRM.'],['Premier lancement : choisis un utilisateur et un mot de passe.','First launch: choose a username and password.'],['Utilisateur','Username'],['Confirmer le mot de passe','Confirm password'],['Mot de passe','Password'],['Se connecter','Sign in'],['Se déconnecter','Sign out'],['Renseigne l’utilisateur et le mot de passe.','Enter your username and password.'],['Le mot de passe doit contenir au moins 8 caractères.','Password must be at least 8 characters.'],['Les mots de passe ne correspondent pas.','Passwords do not match.'],['Identifiants incorrects.','Incorrect username or password.']);
+EN.sort((a,b)=>b[0].length-a[0].length);
+const ses={get:()=>{try{return sessionStorage.getItem('octet_ok')==='1'}catch(e){return window.__ok===1}},set:()=>{try{sessionStorage.setItem('octet_ok','1')}catch(e){}window.__ok=1},clr:()=>{try{sessionStorage.removeItem('octet_ok')}catch(e){}window.__ok=0}};
+const getA=()=>{try{return JSON.parse(localStorage.getItem('octet_auth'))}catch(e){return null}};
+const setA=a=>{try{localStorage.setItem('octet_auth',JSON.stringify(a))}catch(e){}};
+async function hsh(p){try{const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('octet:'+p));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}catch(e){return 'x'+btoa(unescape(encodeURIComponent('octet:'+p)))}}
+function loginScreen(){const A=getA();let d=$('#lgn');if(d)d.remove();d=document.createElement('div');d.id='lgn';
+ d.innerHTML=LX(`<div class='lc'><div class='lg2'><i>O</i>Octet</div><h2>${A?'Connexion':'Créer le compte administrateur'}</h2><p class='k'>${A?'Connecte-toi pour accéder au CRM.':'Premier lancement : choisis un utilisateur et un mot de passe.'}</p><div class='f'><label>Utilisateur<input id='lu' autocomplete='username'></label><label>Mot de passe<input id='lp' type='password' autocomplete='${A?'current-password':'new-password'}'></label>${A?'':`<label>Confirmer le mot de passe<input id='lp2' type='password' autocomplete='new-password'></label>`}</div><p id='le' class='k' style='color:var(--er);min-height:22px;margin:10px 0 0'></p><button class='bt' id='lb' style='width:100%;margin-top:6px'>${A?'Se connecter':'Créer le compte'}</button><div style='text-align:center;margin-top:16px'><a href='#' id='ll'>FR / EN</a></div></div>`);
+ document.body.appendChild(d);
+ const er=m=>{$('#le').textContent=LX(m)};
+ $('#ll').onclick=e=>{e.preventDefault();S.lang=S.lang==='en'?'fr':'en';save();render();loginScreen()};
+ $('#lb').onclick=async()=>{const u=$('#lu').value.trim(),p=$('#lp').value;if(!u||!p){er('Renseigne l’utilisateur et le mot de passe.');return}
+  if(!A){if(p.length<8){er('Le mot de passe doit contenir au moins 8 caractères.');return}if(p!==$('#lp2').value){er('Les mots de passe ne correspondent pas.');return}setA({u,h:await hsh(p)})}
+  else if(u!==A.u||await hsh(p)!==A.h){er('Identifiants incorrects.');return}
+  ses.set();d.remove()};
+ d.querySelectorAll('input').forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter')$('#lb').click()}));
+ $('#lu').focus()}
+const lo=document.createElement('button');lo.className='ib';lo.innerHTML=`<svg class='i' viewBox='0 0 24 24'><path d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9'/></svg>`;lo.onclick=()=>{ses.clr();loginScreen()};$('#tb').before(lo);
+const _st=stat;stat=function(){_st();lo.setAttribute('aria-label',LX('Se déconnecter'))};
 render();
+if(!ses.get())loginScreen();
 </script>
 </body>
 </html>
