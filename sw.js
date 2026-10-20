@@ -1,6 +1,6 @@
 // Service worker Octet CRM : fonctionne hors-ligne après la première visite.
 // Incrémente VERSION à chaque mise à jour de l'application.
-const VERSION = 'octet-v3';
+const VERSION = 'octet-v7';
 const SHELL = ['./', 'index.html', 'manifest.json', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-512.png', 'icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
@@ -25,7 +25,7 @@ self.addEventListener('fetch', e => {
     return;
   }
   // Fichiers du site et polices : cache d'abord, mis à jour en arrière-plan.
-  if (url.origin === location.origin || url.hostname.endsWith('gstatic.com') || url.hostname.endsWith('googleapis.com')) {
+  if (url.origin === location.origin || url.hostname.endsWith('gstatic.com') || url.hostname.endsWith('googleapis.com') || url.hostname.endsWith('cdnjs.cloudflare.com')) {
     e.respondWith(caches.match(req).then(hit => {
       const net = fetch(req).then(r => { if (r.ok || r.type === 'opaque') { const c = r.clone(); caches.open(VERSION).then(x => x.put(req, c)); } return r; }).catch(() => hit);
       return hit || net;
