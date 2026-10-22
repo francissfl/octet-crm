@@ -1,6 +1,6 @@
 // Service worker Octet CRM : fonctionne hors-ligne après la première visite.
 // Incrémente VERSION à chaque mise à jour de l'application.
-const VERSION = 'octet-v7';
+const VERSION = 'octet-v8';
 const SHELL = ['./', 'index.html', 'manifest.json', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-512.png', 'icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
